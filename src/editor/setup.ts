@@ -13,7 +13,7 @@ export function buildEditorExtensions(source: string, error: ParseError | null) 
       "&": {
         height: "100%",
         fontSize: "13px",
-        backgroundColor: "#162038",
+        backgroundColor: "transparent",
         color: "#f7f6f2"
       },
       ".cm-scroller": {
@@ -54,6 +54,9 @@ export function buildEditorExtensions(source: string, error: ParseError | null) 
       },
       ".cm-content": {
         padding: "18px 18px 24px"
+      },
+      ".cm-line": {
+        color: "#f7f6f2"
       },
       ".cm-gutters": {
         borderRight: "1px solid rgba(255, 255, 255, 0.06)",

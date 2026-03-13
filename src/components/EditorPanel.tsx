@@ -16,6 +16,12 @@ export function EditorPanel({ value, parseError, onChange }: EditorPanelProps) {
         <span>Type architecture structure, properties, and connections.</span>
       </div>
       <div className="editor-shell">
+        <div className="editor-shell-bar">
+          <span className="editor-shell-dot editor-shell-dot-red" />
+          <span className="editor-shell-dot editor-shell-dot-amber" />
+          <span className="editor-shell-dot editor-shell-dot-green" />
+          <div className="editor-shell-label">diagram.dsl</div>
+        </div>
         <CodeMirror
           value={value}
           height="100%"
@@ -24,7 +30,7 @@ export function EditorPanel({ value, parseError, onChange }: EditorPanelProps) {
             highlightActiveLine: false,
             lineNumbers: true
           }}
-          theme="light"
+          theme="none"
           extensions={buildEditorExtensions(value, parseError)}
           onChange={onChange}
         />
