@@ -49,6 +49,7 @@ export class LayoutBridge {
       }
 
       if (message.type === "layout-error") {
+        this.disableWorker()
         void this.runFallback(message.id, message.error)
         return
       }
@@ -63,6 +64,7 @@ export class LayoutBridge {
           : event instanceof ErrorEvent
             ? event.message
             : "Unknown worker error"
+      this.disableWorker()
       void this.runFallback(this.currentRequestId, message)
     }
   }
@@ -131,5 +133,10 @@ export class LayoutBridge {
     } catch (error) {
       this.onError?.(error instanceof Error ? error : new Error("Layout failed"))
     }
+  }
+
+  private disableWorker() {
+    this.worker?.terminate()
+    this.worker = null
   }
 }
