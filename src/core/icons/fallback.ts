@@ -1,0 +1,1 @@
+export const fallbackIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/><path d="M10 16h12M16 10v12" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/></svg>`
