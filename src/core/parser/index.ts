@@ -164,7 +164,7 @@ function normalizeDocument(document: RawDiagramDocument): Diagram {
 
 export function parse(source: string): ParseResult {
   try {
-    const document = parseGeneratedDocument(source) as RawDiagramDocument
+    const document = parseGeneratedDocument(source, undefined) as RawDiagramDocument
     return {
       ok: true,
       ast: normalizeDocument(document)
