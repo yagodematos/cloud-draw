@@ -1,12 +1,17 @@
 import { IconRegistry } from "../icons/registry"
-import type { LayoutEdge, LayoutGroup, LayoutNode, LayoutResult } from "../layout/types"
+import type {
+  LayoutEdge,
+  LayoutGroup,
+  LayoutNode,
+  LayoutResult,
+} from "../layout/types"
 import {
   createEdgeElement,
   createGroupElement,
   createNodeElement,
   updateEdgeElement,
   updateGroupElement,
-  updateNodeElement
+  updateNodeElement,
 } from "./node-shapes"
 import { createSvgElement, setAttributes } from "./svg-diff"
 
@@ -14,6 +19,143 @@ interface TransformState {
   x: number
   y: number
   zoom: number
+}
+
+function createNodeGradient() {
+  const gradient = createSvgElement("linearGradient")
+  const start = createSvgElement("stop")
+  const end = createSvgElement("stop")
+
+  setAttributes(gradient, {
+    id: "node-surface",
+    x1: "0%",
+    y1: "0%",
+    x2: "0%",
+    y2: "100%",
+  })
+
+  setAttributes(start, {
+    offset: "0%",
+    "stop-color": "var(--canvas-node-fill-start)",
+  })
+
+  setAttributes(end, {
+    offset: "100%",
+    "stop-color": "var(--canvas-node-fill-end)",
+  })
+
+  gradient.append(start, end)
+  return gradient
+}
+
+function createGroupGradient() {
+  const gradient = createSvgElement("linearGradient")
+  const start = createSvgElement("stop")
+  const end = createSvgElement("stop")
+
+  setAttributes(gradient, {
+    id: "group-surface",
+    x1: "0%",
+    y1: "0%",
+    x2: "0%",
+    y2: "100%",
+  })
+
+  setAttributes(start, {
+    offset: "0%",
+    "stop-color": "var(--canvas-group-fill-start)",
+  })
+
+  setAttributes(end, {
+    offset: "100%",
+    "stop-color": "var(--canvas-group-fill-end)",
+  })
+
+  gradient.append(start, end)
+  return gradient
+}
+
+function createGroupHeaderGradient() {
+  const gradient = createSvgElement("linearGradient")
+  const start = createSvgElement("stop")
+  const end = createSvgElement("stop")
+
+  setAttributes(gradient, {
+    id: "group-header-surface",
+    x1: "0%",
+    y1: "0%",
+    x2: "100%",
+    y2: "0%",
+  })
+
+  setAttributes(start, {
+    offset: "0%",
+    "stop-color": "var(--canvas-group-header-start)",
+  })
+
+  setAttributes(end, {
+    offset: "100%",
+    "stop-color": "var(--canvas-group-header-end)",
+  })
+
+  gradient.append(start, end)
+  return gradient
+}
+
+function createEdgeLabelGradient() {
+  const gradient = createSvgElement("linearGradient")
+  const start = createSvgElement("stop")
+  const end = createSvgElement("stop")
+
+  setAttributes(gradient, {
+    id: "edge-label-surface",
+    x1: "0%",
+    y1: "0%",
+    x2: "0%",
+    y2: "100%",
+  })
+
+  setAttributes(start, {
+    offset: "0%",
+    "stop-color": "var(--canvas-edge-label-fill-start)",
+  })
+
+  setAttributes(end, {
+    offset: "100%",
+    "stop-color": "var(--canvas-edge-label-fill-end)",
+  })
+
+  gradient.append(start, end)
+  return gradient
+}
+
+function createShadowFilter(
+  id: string,
+  dy: number,
+  stdDeviation: number,
+  opacity: number,
+) {
+  const filter = createSvgElement("filter")
+  const shadow = createSvgElement("feDropShadow")
+
+  setAttributes(filter, {
+    id,
+    x: "-20%",
+    y: "-20%",
+    width: "160%",
+    height: "180%",
+  })
+
+  setAttributes(shadow, {
+    dx: 0,
+    dy,
+    stdDeviation,
+    "flood-color": "#1a2744",
+    "flood-opacity": opacity,
+  })
+
+  filter.append(shadow)
+  return filter
 }
 
 function createArrowMarker() {
@@ -27,12 +169,12 @@ function createArrowMarker() {
     refY: 5,
     markerWidth: 8,
     markerHeight: 8,
-    orient: "auto-start-reverse"
+    orient: "auto-start-reverse",
   })
 
   setAttributes(path, {
     d: "M 0 0 L 10 5 L 0 10 z",
-    fill: "var(--canvas-edge)"
+    fill: "var(--canvas-edge)",
   })
 
   marker.append(path)
@@ -67,7 +209,15 @@ export class SvgRenderer {
     const nodeLayer = createSvgElement("g")
 
     svg.classList.add("diagram-svg")
-    defs.append(createArrowMarker())
+    defs.append(
+      createArrowMarker(),
+      createNodeGradient(),
+      createGroupGradient(),
+      createGroupHeaderGradient(),
+      createEdgeLabelGradient(),
+      createShadowFilter("node-shadow", 12, 10, 0.18),
+      createShadowFilter("group-shadow", 20, 16, 0.12),
+    )
     viewport.append(groupLayer, edgeLayer, nodeLayer)
     svg.append(defs, viewport)
     container.append(svg)
@@ -116,13 +266,13 @@ export class SvgRenderer {
     const scale = Math.min(
       (viewport.width - 48) / bounds.width,
       (viewport.height - 48) / bounds.height,
-      1
+      1,
     )
 
     this.setTransform({
       x: Math.max(24, (viewport.width - bounds.width * scale) / 2),
       y: Math.max(24, (viewport.height - bounds.height * scale) / 2),
-      zoom: scale
+      zoom: scale,
     })
   }
 
@@ -150,7 +300,7 @@ export class SvgRenderer {
 
     this.viewport.setAttribute(
       "transform",
-      `translate(${this.transform.x} ${this.transform.y}) scale(${this.transform.zoom})`
+      `translate(${this.transform.x} ${this.transform.y}) scale(${this.transform.zoom})`,
     )
   }
 
@@ -162,12 +312,30 @@ export class SvgRenderer {
     setAttributes(this.svg, {
       viewBox: `0 0 ${Math.max(layout.bounds.width, 960)} ${Math.max(layout.bounds.height, 640)}`,
       width: "100%",
-      height: "100%"
+      height: "100%",
     })
 
-    this.syncLayer(layout.groups, this.groups, this.groupLayer, createGroupElement, updateGroupElement)
-    this.syncLayer(layout.edges, this.edges, this.edgeLayer, createEdgeElement, updateEdgeElement)
-    this.syncLayer(layout.nodes, this.nodes, this.nodeLayer, createNodeElement, updateNodeElement)
+    this.syncLayer(
+      layout.groups,
+      this.groups,
+      this.groupLayer,
+      createGroupElement,
+      updateGroupElement,
+    )
+    this.syncLayer(
+      layout.edges,
+      this.edges,
+      this.edgeLayer,
+      createEdgeElement,
+      updateEdgeElement,
+    )
+    this.syncLayer(
+      layout.nodes,
+      this.nodes,
+      this.nodeLayer,
+      createNodeElement,
+      updateNodeElement,
+    )
   }
 
   private syncLayer<T extends LayoutGroup | LayoutNode | LayoutEdge>(
@@ -175,7 +343,7 @@ export class SvgRenderer {
     registry: Map<string, SVGGElement>,
     layer: SVGGElement,
     create: (entry: T) => SVGGElement,
-    update: (element: SVGGElement, entry: T) => void
+    update: (element: SVGGElement, entry: T) => void,
   ) {
     const nextIds = new Set(entries.map((entry) => entry.id))
 

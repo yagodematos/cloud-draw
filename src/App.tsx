@@ -14,13 +14,18 @@ export default function App() {
   const [pendingAutoFit, setPendingAutoFit] = useState(true)
   const diagram = useDiagram(source)
   const { transform, onPointerDown, onWheel, fitToBounds } = usePanZoom()
+  const currentExample =
+    builtInExamples.find((example) => example.id === selectedExample) ??
+    builtInExamples[0]
 
   useEffect(() => {
     if (!diagram.layout || !pendingAutoFit) {
       return
     }
 
-    const viewport = document.querySelector(".canvas-surface")?.getBoundingClientRect()
+    const viewport = document
+      .querySelector(".canvas-surface")
+      ?.getBoundingClientRect()
     if (viewport) {
       fitToBounds(diagram.layout.bounds, viewport)
       setPendingAutoFit(false)
@@ -32,9 +37,12 @@ export default function App() {
       <Toolbar
         examples={builtInExamples}
         selectedExample={selectedExample}
+        activeExampleName={currentExample.name}
         direction={diagram.ast?.direction ?? "top-bottom"}
         onExampleChange={(exampleId) => {
-          const example = builtInExamples.find((entry) => entry.id === exampleId)
+          const example = builtInExamples.find(
+            (entry) => entry.id === exampleId,
+          )
           if (!example) {
             return
           }
@@ -48,18 +56,27 @@ export default function App() {
             return
           }
 
-          const viewport = document.querySelector(".canvas-surface")?.getBoundingClientRect()
+          const viewport = document
+            .querySelector(".canvas-surface")
+            ?.getBoundingClientRect()
           if (viewport) {
             fitToBounds(diagram.layout.bounds, viewport)
           }
         }}
       />
       <SplitPane
-        left={<EditorPanel value={source} parseError={diagram.parseError} onChange={setSource} />}
+        left={
+          <EditorPanel
+            value={source}
+            parseError={diagram.parseError}
+            onChange={setSource}
+          />
+        }
         right={
           <CanvasPanel
             layout={diagram.layout}
             transform={transform}
+            zoom={transform.zoom}
             status={diagram.status}
             runtimeError={diagram.runtimeError}
             onPointerDown={onPointerDown}
@@ -71,6 +88,9 @@ export default function App() {
         nodeCount={diagram.ast?.nodes.length ?? 0}
         groupCount={diagram.ast?.groups.length ?? 0}
         connectionCount={diagram.ast?.connections.length ?? 0}
+        exampleName={currentExample.name}
+        direction={diagram.ast?.direction ?? "top-bottom"}
+        zoom={transform.zoom}
         state={diagram}
       />
     </div>

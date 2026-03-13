@@ -3,22 +3,23 @@ import type { ElkExtendedEdge, ElkNode, ElkPoint } from "elkjs/lib/elk-api"
 import type { Connection, Diagram, Group, Node } from "../parser/ast"
 import type { LayoutEdge, LayoutGroup, LayoutNode, LayoutResult } from "./types"
 
-const NODE_HEIGHT = 56
-const NODE_MIN_WIDTH = 152
-const GROUP_MIN_WIDTH = 240
-const GROUP_MIN_HEIGHT = 160
-const CHARACTER_WIDTH = 7.2
+const NODE_HEIGHT = 64
+const NODE_MIN_WIDTH = 172
+const GROUP_MIN_WIDTH = 280
+const GROUP_MIN_HEIGHT = 196
+const CHARACTER_WIDTH = 8.2
 
 const ROOT_LAYOUT_OPTIONS = {
   "elk.algorithm": "layered",
   "elk.direction": "DOWN",
   "elk.edgeRouting": "ORTHOGONAL",
-  "elk.layered.spacing.nodeNodeBetweenLayers": "80",
-  "elk.layered.spacing.edgeNodeBetweenLayers": "40",
-  "elk.spacing.componentComponent": "60"
+  "elk.layered.spacing.nodeNodeBetweenLayers": "104",
+  "elk.layered.spacing.edgeNodeBetweenLayers": "56",
+  "elk.spacing.componentComponent": "80",
+  "elk.spacing.nodeNode": "42",
 } as const
 
-const GROUP_PADDING = "[top=56,left=24,bottom=24,right=24]"
+const GROUP_PADDING = "[top=72,left=32,bottom=32,right=32]"
 
 interface EntityLookup {
   nodes: Map<string, Node>
@@ -27,7 +28,10 @@ interface EntityLookup {
 }
 
 function measureNodeWidth(label: string) {
-  return Math.max(NODE_MIN_WIDTH, Math.round(72 + label.length * CHARACTER_WIDTH))
+  return Math.max(
+    NODE_MIN_WIDTH,
+    Math.round(86 + label.length * CHARACTER_WIDTH),
+  )
 }
 
 function directionToElk(direction: Diagram["direction"]) {
@@ -38,7 +42,9 @@ function buildLookup(ast: Diagram): EntityLookup {
   return {
     nodes: new Map(ast.nodes.map((node) => [node.id, node])),
     groups: new Map(ast.groups.map((group) => [group.id, group])),
-    connections: new Map(ast.connections.map((connection) => [connection.id, connection]))
+    connections: new Map(
+      ast.connections.map((connection) => [connection.id, connection]),
+    ),
   }
 }
 
@@ -51,7 +57,7 @@ function buildGroupChildren(group: Group): ElkNode[] {
     return {
       id: child.id,
       width: measureNodeWidth(child.label ?? child.name),
-      height: NODE_HEIGHT
+      height: NODE_HEIGHT,
     }
   })
 }
@@ -62,9 +68,9 @@ function buildGroupNode(group: Group): ElkNode {
     width: GROUP_MIN_WIDTH,
     height: GROUP_MIN_HEIGHT,
     layoutOptions: {
-      "elk.padding": GROUP_PADDING
+      "elk.padding": GROUP_PADDING,
     },
-    children: buildGroupChildren(group)
+    children: buildGroupChildren(group),
   }
 }
 
@@ -74,10 +80,12 @@ export function astToElkGraph(ast: Diagram): ElkNode {
     .map<ElkNode>((node) => ({
       id: node.id,
       width: measureNodeWidth(node.label ?? node.name),
-      height: NODE_HEIGHT
+      height: NODE_HEIGHT,
     }))
 
-  const topLevelGroups = ast.groups.filter((group) => !group.parent).map(buildGroupNode)
+  const topLevelGroups = ast.groups
+    .filter((group) => !group.parent)
+    .map(buildGroupNode)
 
   const edges: ElkExtendedEdge[] = ast.connections.map((connection) => ({
     id: connection.id,
@@ -87,21 +95,21 @@ export function astToElkGraph(ast: Diagram): ElkNode {
       ? [
           {
             text: connection.label,
-            width: Math.max(48, connection.label.length * 7),
-            height: 18
-          }
+            width: Math.max(60, Math.round(connection.label.length * 8.5)),
+            height: 22,
+          },
         ]
-      : undefined
+      : undefined,
   }))
 
   return {
     id: "root",
     layoutOptions: {
       ...ROOT_LAYOUT_OPTIONS,
-      "elk.direction": directionToElk(ast.direction)
+      "elk.direction": directionToElk(ast.direction),
     },
     children: [...topLevelGroups, ...topLevelNodes],
-    edges
+    edges,
   }
 }
 
@@ -128,7 +136,7 @@ function pushAbsoluteNodes(
   offsetY: number,
   lookup: EntityLookup,
   nodes: LayoutNode[],
-  groups: LayoutGroup[]
+  groups: LayoutGroup[],
 ) {
   const x = (node.x ?? 0) + offsetX
   const y = (node.y ?? 0) + offsetY
@@ -144,7 +152,7 @@ function pushAbsoluteNodes(
       label: groupMeta.label ?? groupMeta.name,
       icon: groupMeta.icon,
       color: groupMeta.color,
-      style: groupMeta.style
+      style: groupMeta.style,
     })
   }
 
@@ -158,7 +166,7 @@ function pushAbsoluteNodes(
       height: node.height ?? NODE_HEIGHT,
       label: nodeMeta.label ?? nodeMeta.name,
       icon: nodeMeta.icon,
-      color: nodeMeta.color
+      color: nodeMeta.color,
     })
   }
 
@@ -167,7 +175,10 @@ function pushAbsoluteNodes(
   }
 }
 
-export function extractLayoutResult(ast: Diagram, laidOutGraph: ElkNode): LayoutResult {
+export function extractLayoutResult(
+  ast: Diagram,
+  laidOutGraph: ElkNode,
+): LayoutResult {
   const lookup = buildLookup(ast)
   const nodes: LayoutNode[] = []
   const groups: LayoutGroup[] = []
@@ -176,37 +187,43 @@ export function extractLayoutResult(ast: Diagram, laidOutGraph: ElkNode): Layout
     pushAbsoluteNodes(child, 0, 0, lookup, nodes, groups)
   }
 
-  const edges = (laidOutGraph.edges ?? []).reduce<LayoutEdge[]>((accumulator, edge) => {
-    const connection = lookup.connections.get(edge.id ?? "")
-    if (!connection) {
+  const edges = (laidOutGraph.edges ?? []).reduce<LayoutEdge[]>(
+    (accumulator, edge) => {
+      const connection = lookup.connections.get(edge.id ?? "")
+      if (!connection) {
+        return accumulator
+      }
+
+      accumulator.push({
+        id: connection.id,
+        from: connection.from,
+        to: connection.to,
+        label: connection.label,
+        points: collectPoints(edge),
+        style: connection.style,
+        direction: connection.direction,
+      })
+
       return accumulator
-    }
-
-    accumulator.push({
-      id: connection.id,
-      from: connection.from,
-      to: connection.to,
-      label: connection.label,
-      points: collectPoints(edge),
-      style: connection.style,
-      direction: connection.direction
-    })
-
-    return accumulator
-  }, [])
+    },
+    [],
+  )
 
   return {
     bounds: {
       width: laidOutGraph.width ?? 0,
-      height: laidOutGraph.height ?? 0
+      height: laidOutGraph.height ?? 0,
     },
     nodes,
     groups,
-    edges
+    edges,
   }
 }
 
-export async function computeLayout(ast: Diagram, elk = new ELK()): Promise<LayoutResult> {
+export async function computeLayout(
+  ast: Diagram,
+  elk = new ELK(),
+): Promise<LayoutResult> {
   const graph = astToElkGraph(ast)
   const laidOutGraph = await elk.layout(graph)
   return extractLayoutResult(ast, laidOutGraph)

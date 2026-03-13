@@ -1,26 +1,35 @@
 :root {
   color-scheme: light;
-  --bg-app: #eceae4;
-  --bg-panel: rgba(250, 248, 243, 0.92);
-  --bg-panel-muted: rgba(238, 233, 223, 0.92);
-  --border-subtle: rgba(31, 41, 55, 0.1);
-  --border-strong: rgba(31, 41, 55, 0.16);
-  --text-primary: #162038;
-  --text-secondary: #5f6b82;
-  --accent-primary: #1b5cff;
-  --accent-soft: rgba(27, 92, 255, 0.12);
-  --accent-warm: #f08c38;
-  --shadow-panel: 0 26px 70px rgba(38, 47, 71, 0.12);
-  --canvas-node-fill: #ffffff;
-  --canvas-node-stroke: #d4dce8;
-  --canvas-node-label: #172033;
-  --canvas-node-shadow: rgba(34, 52, 92, 0.12);
-  --canvas-group-fill: rgba(240, 244, 252, 0.92);
-  --canvas-group-stroke: #bfcce2;
-  --canvas-group-header: rgba(221, 231, 248, 0.92);
-  --canvas-group-label: #41516f;
-  --canvas-edge: #5d6f90;
-  --canvas-edge-label: #41516f;
+  --bg-app: #e8e2d7;
+  --bg-panel: rgba(252, 248, 241, 0.9);
+  --bg-panel-muted: rgba(239, 232, 220, 0.88);
+  --border-subtle: rgba(36, 47, 72, 0.1);
+  --border-strong: rgba(36, 47, 72, 0.18);
+  --text-primary: #15203a;
+  --text-secondary: #59657b;
+  --accent-primary: #245dff;
+  --accent-soft: rgba(36, 93, 255, 0.12);
+  --accent-warm: #ef8e46;
+  --shadow-panel: 0 30px 80px rgba(45, 50, 69, 0.13);
+  --canvas-node-fill-start: #fffdfa;
+  --canvas-node-fill-end: #f6f1ea;
+  --canvas-node-stroke: #ccd5e2;
+  --canvas-node-label: #17233b;
+  --canvas-node-shadow: rgba(24, 37, 66, 0.08);
+  --canvas-group-fill-start: rgba(249, 251, 255, 0.94);
+  --canvas-group-fill-end: rgba(238, 243, 251, 0.92);
+  --canvas-group-stroke: #bfd0e6;
+  --canvas-group-header-start: rgba(215, 228, 248, 0.96);
+  --canvas-group-header-end: rgba(205, 218, 240, 0.88);
+  --canvas-group-label: #334463;
+  --canvas-edge: #62779b;
+  --canvas-edge-label: #384a69;
+  --canvas-edge-label-fill-start: rgba(255, 255, 255, 0.97);
+  --canvas-edge-label-fill-end: rgba(245, 239, 232, 0.95);
+  --canvas-edge-label-stroke: rgba(98, 119, 155, 0.16);
+  --canvas-grid-major: rgba(52, 91, 180, 0.07);
+  --canvas-grid-minor: rgba(52, 91, 180, 0.03);
+  --canvas-spotlight: rgba(255, 255, 255, 0.58);
   --font-sans:
     "IBM Plex Sans", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:
@@ -38,11 +47,24 @@ body,
   min-height: 100%;
 }
 
-  body {
+body {
   background:
-    radial-gradient(circle at top left, rgba(27, 92, 255, 0.18), transparent 24%),
-    radial-gradient(circle at 75% 12%, rgba(240, 140, 56, 0.18), transparent 20%),
-    linear-gradient(180deg, #f7f4ee 0%, var(--bg-app) 100%);
+    radial-gradient(
+      circle at 12% 10%,
+      rgba(36, 93, 255, 0.22),
+      transparent 22%
+    ),
+    radial-gradient(
+      circle at 82% 14%,
+      rgba(239, 142, 70, 0.18),
+      transparent 18%
+    ),
+    radial-gradient(
+      circle at 50% 100%,
+      rgba(255, 255, 255, 0.52),
+      transparent 30%
+    ),
+    linear-gradient(180deg, #f6f1e8 0%, var(--bg-app) 100%);
   color: var(--text-primary);
   font-family: var(--font-sans);
 }

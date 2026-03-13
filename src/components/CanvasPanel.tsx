@@ -6,6 +6,7 @@ import type { CanvasTransform } from "../hooks/usePanZoom"
 interface CanvasPanelProps {
   layout: LayoutResult | null
   transform: CanvasTransform
+  zoom: number
   status: "idle" | "parsing" | "layouting" | "ready" | "error"
   runtimeError: string | null
   onPointerDown: (event: PointerEvent<HTMLElement>) => void
@@ -15,10 +16,11 @@ interface CanvasPanelProps {
 export function CanvasPanel({
   layout,
   transform,
+  zoom,
   status,
   runtimeError,
   onPointerDown,
-  onWheel
+  onWheel,
 }: CanvasPanelProps) {
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const rendererRef = useRef<SvgRenderer | null>(null)
@@ -50,15 +52,37 @@ export function CanvasPanel({
   return (
     <div className="canvas-panel">
       <div className="panel-title">
-        <strong>Live diagram</strong>
-        <span>Pan with drag. Zoom with the trackpad or mouse wheel.</span>
+        <strong>Interactive canvas</strong>
+        <span>
+          Drag to pan, scroll to zoom, and use Fit view to recentre the active
+          system map.
+        </span>
       </div>
-      <div className="canvas-surface" onPointerDown={onPointerDown} onWheel={onWheel}>
+      <div
+        className="canvas-surface"
+        onPointerDown={onPointerDown}
+        onWheel={onWheel}
+      >
+        <div className="canvas-hud canvas-hud-top" aria-hidden="true">
+          <div className="canvas-hud-card">
+            <span className="canvas-hud-label">Canvas mode</span>
+            <strong>{layout ? "Live preview" : "Waiting for layout"}</strong>
+          </div>
+          <div className="canvas-hud-chip">{Math.round(zoom * 100)}% zoom</div>
+        </div>
+        <div className="canvas-hud canvas-hud-bottom" aria-hidden="true">
+          <div className="canvas-hud-chip">Drag to pan</div>
+          <div className="canvas-hud-chip">Wheel to zoom</div>
+        </div>
         <div ref={canvasRef} className="canvas-mount" />
         {!layout ? (
           <div className="canvas-placeholder">
             <div className="canvas-empty-card">
-              <strong>{status === "layouting" ? "Building layout" : "Diagram unavailable"}</strong>
+              <strong>
+                {status === "layouting"
+                  ? "Building layout"
+                  : "Diagram unavailable"}
+              </strong>
               <p>
                 {runtimeError ??
                   (status === "parsing"

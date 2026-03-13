@@ -10,19 +10,19 @@ vi.mock("@uiw/react-codemirror", () => {
     __esModule: true,
     EditorView: {
       decorations: {
-        of: (value: unknown) => value
+        of: (value: unknown) => value,
       },
       lineWrapping: {},
-      theme: () => ({})
+      theme: () => ({}),
     },
     Decoration: {
       mark: () => ({ range: () => ({}) }),
       line: () => ({ range: () => ({}) }),
-      set: (ranges: unknown[]) => ranges
+      set: (ranges: unknown[]) => ranges,
     },
     default: ({
       value,
-      onChange
+      onChange,
     }: {
       value: string
       onChange: (value: string) => void
@@ -32,7 +32,7 @@ vi.mock("@uiw/react-codemirror", () => {
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
-    )
+    ),
   }
 })
 
@@ -47,7 +47,7 @@ function createLayout(ast: Diagram): LayoutResult {
       height: 56,
       label: node.label ?? node.name,
       icon: node.icon,
-      color: node.color
+      color: node.color,
     })),
     groups: ast.groups.map((group, index) => ({
       id: group.id,
@@ -58,7 +58,7 @@ function createLayout(ast: Diagram): LayoutResult {
       label: group.label ?? group.name,
       icon: group.icon,
       color: group.color,
-      style: group.style
+      style: group.style,
     })),
     edges: ast.connections.map((connection, index) => ({
       id: connection.id,
@@ -69,9 +69,9 @@ function createLayout(ast: Diagram): LayoutResult {
       direction: connection.direction,
       points: [
         { x: 220 + index * 18, y: 160 + index * 10 },
-        { x: 320 + index * 18, y: 160 + index * 10 }
-      ]
-    }))
+        { x: 320 + index * 18, y: 160 + index * 10 },
+      ],
+    })),
   }
 }
 
@@ -90,7 +90,7 @@ vi.mock("../../src/core/layout/layout-bridge", async () => {
       terminate() {
         return undefined
       }
-    }
+    },
   }
 })
 
@@ -100,8 +100,9 @@ describe("App", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        text: async () => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"></svg>'
-      })
+        text: async () =>
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"></svg>',
+      }),
     )
 
     Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
@@ -118,9 +119,9 @@ describe("App", () => {
           y: 0,
           toJSON() {
             return {}
-          }
+          },
         }
-      }
+      },
     })
   })
 
@@ -129,17 +130,17 @@ describe("App", () => {
     render(<App />)
 
     await waitFor(() => {
-      expect(screen.getByText("6 nodes")).toBeInTheDocument()
-      expect(screen.getByText("1 groups")).toBeInTheDocument()
-      expect(screen.getByText("5 connections")).toBeInTheDocument()
+      expect(screen.getByLabelText("6 nodes")).toBeInTheDocument()
+      expect(screen.getByLabelText("1 groups")).toBeInTheDocument()
+      expect(screen.getByLabelText("5 connections")).toBeInTheDocument()
     })
 
     await user.selectOptions(screen.getByRole("combobox"), "microservices")
 
     await waitFor(() => {
-      expect(screen.getByText("5 nodes")).toBeInTheDocument()
-      expect(screen.getByText("1 groups")).toBeInTheDocument()
-      expect(screen.getByText("6 connections")).toBeInTheDocument()
+      expect(screen.getByLabelText("5 nodes")).toBeInTheDocument()
+      expect(screen.getByLabelText("1 groups")).toBeInTheDocument()
+      expect(screen.getByLabelText("6 connections")).toBeInTheDocument()
     })
   })
 
@@ -150,8 +151,10 @@ describe("App", () => {
     fireEvent.change(editor, { target: { value: "Broken {" } })
 
     await waitFor(() => {
-      expect(screen.getByText(/Unexpected brace in statement/)).toBeInTheDocument()
-      expect(screen.getByText("6 nodes")).toBeInTheDocument()
+      expect(
+        screen.getByText(/Unexpected brace in statement/),
+      ).toBeInTheDocument()
+      expect(screen.getByLabelText("6 nodes")).toBeInTheDocument()
     })
   })
 })
