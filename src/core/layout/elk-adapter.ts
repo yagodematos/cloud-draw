@@ -4,22 +4,22 @@ import type { Connection, Diagram, Group, Node } from "../parser/ast"
 import type { LayoutEdge, LayoutGroup, LayoutNode, LayoutResult } from "./types"
 
 const NODE_HEIGHT = 64
-const NODE_MIN_WIDTH = 172
-const GROUP_MIN_WIDTH = 280
-const GROUP_MIN_HEIGHT = 196
-const CHARACTER_WIDTH = 8.2
+const NODE_MIN_WIDTH = 164
+const GROUP_MIN_WIDTH = 264
+const GROUP_MIN_HEIGHT = 188
+const CHARACTER_WIDTH = 7.8
 
 const ROOT_LAYOUT_OPTIONS = {
   "elk.algorithm": "layered",
   "elk.direction": "DOWN",
   "elk.edgeRouting": "ORTHOGONAL",
-  "elk.layered.spacing.nodeNodeBetweenLayers": "104",
-  "elk.layered.spacing.edgeNodeBetweenLayers": "56",
-  "elk.spacing.componentComponent": "80",
-  "elk.spacing.nodeNode": "42",
+  "elk.layered.spacing.nodeNodeBetweenLayers": "78",
+  "elk.layered.spacing.edgeNodeBetweenLayers": "40",
+  "elk.spacing.componentComponent": "64",
+  "elk.spacing.nodeNode": "30",
 } as const
 
-const GROUP_PADDING = "[top=72,left=32,bottom=32,right=32]"
+const GROUP_PADDING = "[top=64,left=28,bottom=28,right=28]"
 
 interface EntityLookup {
   nodes: Map<string, Node>
@@ -30,7 +30,7 @@ interface EntityLookup {
 function measureNodeWidth(label: string) {
   return Math.max(
     NODE_MIN_WIDTH,
-    Math.round(86 + label.length * CHARACTER_WIDTH),
+    Math.round(80 + label.length * CHARACTER_WIDTH),
   )
 }
 

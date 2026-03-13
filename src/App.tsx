@@ -4,6 +4,7 @@ import { EditorPanel } from "./components/EditorPanel"
 import { SplitPane } from "./components/SplitPane"
 import { StatusBar } from "./components/StatusBar"
 import { Toolbar } from "./components/Toolbar"
+import { getLayoutContentBounds } from "./core/layout/content-bounds"
 import { builtInExamples } from "./examples"
 import { useDiagram } from "./hooks/useDiagram"
 import { usePanZoom } from "./hooks/usePanZoom"
@@ -19,18 +20,26 @@ export default function App() {
     builtInExamples[0]
 
   useEffect(() => {
-    if (!diagram.layout || !pendingAutoFit) {
+    const layout = diagram.layout
+
+    if (!layout || !pendingAutoFit || diagram.status !== "ready") {
       return
     }
 
-    const viewport = document
-      .querySelector(".canvas-surface")
-      ?.getBoundingClientRect()
-    if (viewport) {
-      fitToBounds(diagram.layout.bounds, viewport)
-      setPendingAutoFit(false)
+    const frameId = window.requestAnimationFrame(() => {
+      const viewport = document
+        .querySelector(".canvas-surface")
+        ?.getBoundingClientRect()
+      if (viewport) {
+        fitToBounds(getLayoutContentBounds(layout), viewport)
+        setPendingAutoFit(false)
+      }
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
     }
-  }, [diagram.layout, fitToBounds, pendingAutoFit])
+  }, [diagram.layout, diagram.status, fitToBounds, pendingAutoFit])
 
   return (
     <div className="app-shell">
@@ -60,7 +69,7 @@ export default function App() {
             .querySelector(".canvas-surface")
             ?.getBoundingClientRect()
           if (viewport) {
-            fitToBounds(diagram.layout.bounds, viewport)
+            fitToBounds(getLayoutContentBounds(diagram.layout), viewport)
           }
         }}
       />
