@@ -1,21 +1,76 @@
+import { useEffect, useState } from "react"
+import { CanvasPanel } from "./components/CanvasPanel"
+import { EditorPanel } from "./components/EditorPanel"
+import { SplitPane } from "./components/SplitPane"
+import { StatusBar } from "./components/StatusBar"
+import { Toolbar } from "./components/Toolbar"
+import { builtInExamples } from "./examples"
+import { useDiagram } from "./hooks/useDiagram"
+import { usePanZoom } from "./hooks/usePanZoom"
+
 export default function App() {
+  const [selectedExample, setSelectedExample] = useState(builtInExamples[0].id)
+  const [source, setSource] = useState(builtInExamples[0].source)
+  const [pendingAutoFit, setPendingAutoFit] = useState(true)
+  const diagram = useDiagram(source)
+  const { transform, onPointerDown, onWheel, fitToBounds } = usePanZoom()
+
+  useEffect(() => {
+    if (!diagram.layout || !pendingAutoFit) {
+      return
+    }
+
+    const viewport = document.querySelector(".canvas-surface")?.getBoundingClientRect()
+    if (viewport) {
+      fitToBounds(diagram.layout.bounds, viewport)
+      setPendingAutoFit(false)
+    }
+  }, [diagram.layout, fitToBounds, pendingAutoFit])
+
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <div>
-          <p className="app-kicker">CloudDSL</p>
-          <h1>Architecture diagrams as code</h1>
-        </div>
-        <p className="app-summary">Scaffold ready. Parser, layout, and renderer will attach here.</p>
-      </header>
-      <main className="app-main">
-        <section className="panel panel-editor" aria-label="Editor placeholder">
-          Editor panel
-        </section>
-        <section className="panel panel-canvas" aria-label="Canvas placeholder">
-          Canvas panel
-        </section>
-      </main>
+      <Toolbar
+        examples={builtInExamples}
+        selectedExample={selectedExample}
+        direction={diagram.ast?.direction ?? "top-bottom"}
+        onExampleChange={(exampleId) => {
+          const example = builtInExamples.find((entry) => entry.id === exampleId)
+          if (!example) {
+            return
+          }
+
+          setSelectedExample(example.id)
+          setPendingAutoFit(true)
+          setSource(example.source)
+        }}
+        onFit={() => {
+          if (!diagram.layout) {
+            return
+          }
+
+          const viewport = document.querySelector(".canvas-surface")?.getBoundingClientRect()
+          if (viewport) {
+            fitToBounds(diagram.layout.bounds, viewport)
+          }
+        }}
+      />
+      <SplitPane
+        left={<EditorPanel value={source} parseError={diagram.parseError} onChange={setSource} />}
+        right={
+          <CanvasPanel
+            layout={diagram.layout}
+            transform={transform}
+            onPointerDown={onPointerDown}
+            onWheel={onWheel}
+          />
+        }
+      />
+      <StatusBar
+        nodeCount={diagram.ast?.nodes.length ?? 0}
+        groupCount={diagram.ast?.groups.length ?? 0}
+        connectionCount={diagram.ast?.connections.length ?? 0}
+        state={diagram}
+      />
     </div>
   )
 }

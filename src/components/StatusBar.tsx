@@ -1,0 +1,24 @@
+import type { UseDiagramResult } from "../hooks/useDiagram"
+
+interface StatusBarProps {
+  nodeCount: number
+  groupCount: number
+  connectionCount: number
+  state: UseDiagramResult
+}
+
+export function StatusBar({ nodeCount, groupCount, connectionCount, state }: StatusBarProps) {
+  return (
+    <footer className="status-bar">
+      <span>{nodeCount} nodes</span>
+      <span>{groupCount} groups</span>
+      <span>{connectionCount} connections</span>
+      <span className={`status-pill status-${state.status}`}>{state.status}</span>
+      <span className="status-message">
+        {state.parseError
+          ? `${state.parseError.message} at ${state.parseError.line}:${state.parseError.column}`
+          : "Live preview ready"}
+      </span>
+    </footer>
+  )
+}
