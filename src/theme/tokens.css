@@ -1,0 +1,36 @@
+:root {
+  color-scheme: light;
+  --bg-app: #eef2f7;
+  --bg-panel: rgba(255, 255, 255, 0.9);
+  --bg-panel-muted: #f6f8fb;
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.14);
+  --text-primary: #172033;
+  --text-secondary: #5b6578;
+  --accent-primary: #1d4ed8;
+  --accent-soft: rgba(29, 78, 216, 0.12);
+  --shadow-panel: 0 24px 60px rgba(36, 55, 99, 0.12);
+  --font-sans:
+    "IBM Plex Sans", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:
+    "IBM Plex Mono", "SFMono-Regular", "SF Mono", Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(29, 78, 216, 0.12), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, var(--bg-app) 100%);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
