@@ -1,7 +1,10 @@
 import type { ElkNode } from "elkjs/lib/elk-api"
 import { describe, expect, it } from "vitest"
 import type { Diagram } from "../../src/core/parser/ast"
-import { astToElkGraph, extractLayoutResult } from "../../src/core/layout/elk-adapter"
+import {
+  astToElkGraph,
+  extractLayoutResult,
+} from "../../src/core/layout/elk-adapter"
 
 const sampleDiagram: Diagram = {
   direction: "left-right",
@@ -12,8 +15,8 @@ const sampleDiagram: Diagram = {
       icon: "cloud",
       location: {
         start: { offset: 0, line: 1, column: 1 },
-        end: { offset: 10, line: 1, column: 11 }
-      }
+        end: { offset: 10, line: 1, column: 11 },
+      },
     },
     {
       id: "app-server",
@@ -22,9 +25,9 @@ const sampleDiagram: Diagram = {
       icon: "server",
       location: {
         start: { offset: 12, line: 2, column: 1 },
-        end: { offset: 20, line: 2, column: 9 }
-      }
-    }
+        end: { offset: 20, line: 2, column: 9 },
+      },
+    },
   ],
   groups: [
     {
@@ -34,9 +37,9 @@ const sampleDiagram: Diagram = {
       children: [],
       location: {
         start: { offset: 21, line: 3, column: 1 },
-        end: { offset: 30, line: 3, column: 10 }
-      }
-    }
+        end: { offset: 30, line: 3, column: 10 },
+      },
+    },
   ],
   connections: [
     {
@@ -47,10 +50,10 @@ const sampleDiagram: Diagram = {
       direction: "forward",
       location: {
         start: { offset: 31, line: 4, column: 1 },
-        end: { offset: 40, line: 4, column: 10 }
-      }
-    }
-  ]
+        end: { offset: 40, line: 4, column: 10 },
+      },
+    },
+  ],
 }
 
 sampleDiagram.groups[0].children.push(sampleDiagram.nodes[1])
@@ -62,7 +65,9 @@ describe("astToElkGraph", () => {
     expect(graph.layoutOptions?.["elk.direction"]).toBe("RIGHT")
     expect(graph.children).toHaveLength(2)
     expect(graph.edges).toHaveLength(1)
-    expect(graph.children?.find((child) => child.id === "vpc")?.children).toHaveLength(1)
+    expect(
+      graph.children?.find((child) => child.id === "vpc")?.children,
+    ).toHaveLength(1)
   })
 })
 
@@ -85,17 +90,17 @@ describe("extractLayoutResult", () => {
               x: 32,
               y: 56,
               width: 180,
-              height: 56
-            }
-          ]
+              height: 56,
+            },
+          ],
         },
         {
           id: "api-gateway",
           x: 420,
           y: 80,
           width: 170,
-          height: 56
-        }
+          height: 56,
+        },
       ],
       edges: [
         {
@@ -107,21 +112,146 @@ describe("extractLayoutResult", () => {
               id: "section-1",
               startPoint: { x: 420, y: 108 },
               bendPoints: [{ x: 320, y: 108 }],
-              endPoint: { x: 72, y: 116 }
-            }
-          ]
-        }
-      ]
+              endPoint: { x: 72, y: 116 },
+            },
+          ],
+        },
+      ],
     }
 
     const result = extractLayoutResult(sampleDiagram, laidOutGraph)
 
     expect(result.bounds).toEqual({ width: 800, height: 600 })
     expect(result.groups[0]).toMatchObject({ id: "vpc", x: 40, y: 60 })
-    expect(result.nodes.find((node) => node.id === "app-server")).toMatchObject({
-      x: 72,
-      y: 116
-    })
+    expect(result.nodes.find((node) => node.id === "app-server")).toMatchObject(
+      {
+        x: 72,
+        y: 116,
+      },
+    )
     expect(result.edges[0].points).toHaveLength(3)
+  })
+
+  it("falls back to computed routes for missing or bidirectional edge sections", () => {
+    const diagram: Diagram = {
+      direction: "top-bottom",
+      nodes: [
+        {
+          id: "frontend",
+          name: "Frontend",
+          location: {
+            start: { offset: 0, line: 1, column: 1 },
+            end: { offset: 8, line: 1, column: 9 },
+          },
+        },
+        {
+          id: "service",
+          name: "Service",
+          location: {
+            start: { offset: 9, line: 2, column: 1 },
+            end: { offset: 16, line: 2, column: 8 },
+          },
+        },
+        {
+          id: "bus",
+          name: "Bus",
+          location: {
+            start: { offset: 17, line: 3, column: 1 },
+            end: { offset: 20, line: 3, column: 4 },
+          },
+        },
+      ],
+      groups: [],
+      connections: [
+        {
+          id: "frontend-service",
+          from: "frontend",
+          to: "service",
+          style: "solid",
+          direction: "forward",
+          location: {
+            start: { offset: 21, line: 4, column: 1 },
+            end: { offset: 30, line: 4, column: 10 },
+          },
+        },
+        {
+          id: "service-bus",
+          from: "service",
+          to: "bus",
+          style: "solid",
+          direction: "bidirectional",
+          location: {
+            start: { offset: 31, line: 5, column: 1 },
+            end: { offset: 40, line: 5, column: 10 },
+          },
+        },
+      ],
+    }
+
+    const laidOutGraph: ElkNode = {
+      id: "root",
+      width: 800,
+      height: 600,
+      children: [
+        {
+          id: "frontend",
+          x: 40,
+          y: 40,
+          width: 164,
+          height: 64,
+        },
+        {
+          id: "service",
+          x: 40,
+          y: 180,
+          width: 164,
+          height: 64,
+        },
+        {
+          id: "bus",
+          x: 280,
+          y: 180,
+          width: 164,
+          height: 64,
+        },
+      ],
+      edges: [
+        {
+          id: "frontend-service",
+          sources: ["frontend"],
+          targets: ["service"],
+          sections: [],
+        },
+        {
+          id: "service-bus",
+          sources: ["service"],
+          targets: ["bus"],
+          sections: [
+            {
+              id: "section-1",
+              startPoint: { x: 204, y: 212 },
+              bendPoints: [
+                { x: 214, y: 212 },
+                { x: 214, y: 150 },
+              ],
+              endPoint: { x: 280, y: 150 },
+            },
+          ],
+        },
+      ],
+    }
+
+    const result = extractLayoutResult(diagram, laidOutGraph)
+
+    expect(result.edges).toHaveLength(2)
+    expect(
+      result.edges.find((edge) => edge.id === "frontend-service")?.points,
+    ).toHaveLength(2)
+    expect(
+      result.edges.find((edge) => edge.id === "service-bus")?.points,
+    ).toEqual([
+      { x: 204, y: 212 },
+      { x: 280, y: 212 },
+    ])
   })
 })

@@ -130,6 +130,61 @@ function collectPoints(edge: ElkExtendedEdge) {
   })
 }
 
+interface LayoutBox {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+function routeFallbackEdge(from: LayoutBox, to: LayoutBox): ElkPoint[] {
+  const fromCenterX = from.x + from.width / 2
+  const fromCenterY = from.y + from.height / 2
+  const toCenterX = to.x + to.width / 2
+  const toCenterY = to.y + to.height / 2
+  const deltaX = toCenterX - fromCenterX
+  const deltaY = toCenterY - fromCenterY
+
+  if (Math.abs(deltaX) >= Math.abs(deltaY)) {
+    const startX = deltaX >= 0 ? from.x + from.width : from.x
+    const endX = deltaX >= 0 ? to.x : to.x + to.width
+    const midX = (startX + endX) / 2
+
+    return [
+      { x: startX, y: fromCenterY },
+      { x: midX, y: fromCenterY },
+      { x: midX, y: toCenterY },
+      { x: endX, y: toCenterY },
+    ]
+  }
+
+  const startY = deltaY >= 0 ? from.y + from.height : from.y
+  const endY = deltaY >= 0 ? to.y : to.y + to.height
+  const midY = (startY + endY) / 2
+
+  return [
+    { x: fromCenterX, y: startY },
+    { x: fromCenterX, y: midY },
+    { x: toCenterX, y: midY },
+    { x: toCenterX, y: endY },
+  ]
+}
+
+function compactPoints(points: ElkPoint[]) {
+  return points.filter((point, index) => {
+    const previous = points[index - 1]
+    const next = points[index + 1]
+
+    if (!previous || !next) {
+      return true
+    }
+
+    const isVertical = previous.x === point.x && point.x === next.x
+    const isHorizontal = previous.y === point.y && point.y === next.y
+    return !isVertical && !isHorizontal
+  })
+}
+
 function pushAbsoluteNodes(
   node: ElkNode,
   offsetX: number,
@@ -187,10 +242,34 @@ export function extractLayoutResult(
     pushAbsoluteNodes(child, 0, 0, lookup, nodes, groups)
   }
 
+  const boundsByIdEntries: Array<readonly [string, LayoutBox]> = [
+    ...groups.map((group): readonly [string, LayoutBox] => [group.id, group]),
+    ...nodes.map((node): readonly [string, LayoutBox] => [node.id, node]),
+  ]
+  const boundsById = new Map<string, LayoutBox>(boundsByIdEntries)
+
   const edges = (laidOutGraph.edges ?? []).reduce<LayoutEdge[]>(
     (accumulator, edge) => {
       const connection = lookup.connections.get(edge.id ?? "")
       if (!connection) {
+        return accumulator
+      }
+
+      const source = boundsById.get(connection.from)
+      const target = boundsById.get(connection.to)
+      const elkPoints = collectPoints(edge)
+      const points =
+        connection.direction === "bidirectional"
+          ? source && target
+            ? routeFallbackEdge(source, target)
+            : elkPoints
+          : elkPoints.length >= 2
+            ? elkPoints
+            : source && target
+              ? routeFallbackEdge(source, target)
+              : elkPoints
+
+      if (points.length < 2) {
         return accumulator
       }
 
@@ -199,7 +278,7 @@ export function extractLayoutResult(
         from: connection.from,
         to: connection.to,
         label: connection.label,
-        points: collectPoints(edge),
+        points: compactPoints(points),
         style: connection.style,
         direction: connection.direction,
       })
