@@ -6,11 +6,20 @@ import type { CanvasTransform } from "../hooks/usePanZoom"
 interface CanvasPanelProps {
   layout: LayoutResult | null
   transform: CanvasTransform
+  status: "idle" | "parsing" | "layouting" | "ready" | "error"
+  runtimeError: string | null
   onPointerDown: (event: PointerEvent<HTMLElement>) => void
   onWheel: (event: WheelEvent<HTMLElement>) => void
 }
 
-export function CanvasPanel({ layout, transform, onPointerDown, onWheel }: CanvasPanelProps) {
+export function CanvasPanel({
+  layout,
+  transform,
+  status,
+  runtimeError,
+  onPointerDown,
+  onWheel
+}: CanvasPanelProps) {
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const rendererRef = useRef<SvgRenderer | null>(null)
 
@@ -48,7 +57,15 @@ export function CanvasPanel({ layout, transform, onPointerDown, onWheel }: Canva
         <div ref={canvasRef} className="canvas-mount" />
         {!layout ? (
           <div className="canvas-placeholder">
-            <p>Start typing DSL to generate a layout.</p>
+            <div className="canvas-empty-card">
+              <strong>{status === "layouting" ? "Building layout" : "Diagram unavailable"}</strong>
+              <p>
+                {runtimeError ??
+                  (status === "parsing"
+                    ? "Parsing source before layout."
+                    : "Start typing DSL to generate a layout.")}
+              </p>
+            </div>
           </div>
         ) : null}
       </div>

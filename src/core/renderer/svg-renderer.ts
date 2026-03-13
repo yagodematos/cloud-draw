@@ -148,8 +148,10 @@ export class SvgRenderer {
       return
     }
 
-    this.viewport.style.transformOrigin = "0 0"
-    this.viewport.style.transform = `translate(${this.transform.x}px, ${this.transform.y}px) scale(${this.transform.zoom})`
+    this.viewport.setAttribute(
+      "transform",
+      `translate(${this.transform.x} ${this.transform.y}) scale(${this.transform.zoom})`
+    )
   }
 
   private flushLayout(layout: LayoutResult) {

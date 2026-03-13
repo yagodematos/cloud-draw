@@ -6,24 +6,40 @@ type LayoutWorker = Pick<Worker, "postMessage" | "terminate" | "onmessage" | "on
 interface LayoutBridgeOptions {
   workerFactory?: () => Worker
   debounceMs?: number
+  computeLayout?: (ast: Diagram) => Promise<LayoutResult>
 }
 
 export class LayoutBridge {
-  private worker: LayoutWorker
+  private worker: LayoutWorker | null = null
   private debounceMs: number
   private timeoutId: number | null = null
   private currentRequestId = 0
+  private computeLayout: (ast: Diagram) => Promise<LayoutResult>
+  private latestAst: Diagram | null = null
 
   onResult?: (result: LayoutResult) => void
   onError?: (error: Error) => void
 
   constructor(options: LayoutBridgeOptions = {}) {
-    const workerFactory =
-      options.workerFactory ??
-      (() => new Worker(new URL("./layout-worker.ts", import.meta.url), { type: "module" }))
-
-    this.worker = workerFactory()
+    const workerFactory = options.workerFactory
+    this.computeLayout =
+      options.computeLayout ??
+      (async (ast) => {
+        const { computeLayout } = await import("./elk-adapter")
+        return computeLayout(ast)
+      })
     this.debounceMs = options.debounceMs ?? 80
+
+    try {
+      const createWorker =
+        workerFactory ??
+        (() => new Worker(new URL("./layout-worker.ts", import.meta.url), { type: "module" }))
+
+      this.worker = createWorker()
+    } catch {
+      this.worker = null
+      return
+    }
 
     this.worker.onmessage = (event: MessageEvent<LayoutWorkerResponse>) => {
       const message = event.data
@@ -33,7 +49,7 @@ export class LayoutBridge {
       }
 
       if (message.type === "layout-error") {
-        this.onError?.(new Error(message.error))
+        void this.runFallback(message.id, message.error)
         return
       }
 
@@ -47,7 +63,7 @@ export class LayoutBridge {
           : event instanceof ErrorEvent
             ? event.message
             : "Unknown worker error"
-      this.onError?.(new Error(message))
+      void this.runFallback(this.currentRequestId, message)
     }
   }
 
@@ -58,7 +74,14 @@ export class LayoutBridge {
 
     const id = this.currentRequestId + 1
     this.currentRequestId = id
+    this.latestAst = ast
     this.timeoutId = window.setTimeout(() => {
+      if (!this.worker) {
+        void this.runLayoutComputation(id, ast)
+        this.timeoutId = null
+        return
+      }
+
       const message: LayoutWorkerRequest = {
         type: "layout",
         id,
@@ -75,6 +98,38 @@ export class LayoutBridge {
       this.timeoutId = null
     }
 
-    this.worker.terminate()
+    this.worker?.terminate()
+  }
+
+  private async runFallback(id: number, originalError: string) {
+    try {
+      await this.runLayoutComputation(id)
+    } catch (error) {
+      this.onError?.(
+        new Error(
+          `${originalError}. Fallback layout also failed: ${
+            error instanceof Error ? error.message : "Unknown fallback error"
+          }`
+        )
+      )
+    }
+  }
+
+  private async runLayoutComputation(id: number, astOverride?: Diagram) {
+    const ast = astOverride ?? this.latestAst
+    if (!ast) {
+      return
+    }
+
+    try {
+      const layout = await this.computeLayout(ast)
+      if (id !== this.currentRequestId) {
+        return
+      }
+
+      this.onResult?.(layout)
+    } catch (error) {
+      this.onError?.(error instanceof Error ? error : new Error("Layout failed"))
+    }
   }
 }

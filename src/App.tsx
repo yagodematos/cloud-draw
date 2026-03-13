@@ -60,6 +60,8 @@ export default function App() {
           <CanvasPanel
             layout={diagram.layout}
             transform={transform}
+            status={diagram.status}
+            runtimeError={diagram.runtimeError}
             onPointerDown={onPointerDown}
             onWheel={onWheel}
           />

@@ -8,17 +8,23 @@ interface StatusBarProps {
 }
 
 export function StatusBar({ nodeCount, groupCount, connectionCount, state }: StatusBarProps) {
+  const message = state.parseError
+    ? `${state.parseError.message} at ${state.parseError.line}:${state.parseError.column}`
+    : state.runtimeError
+      ? state.runtimeError
+      : state.status === "layouting"
+        ? "Computing layout"
+        : state.status === "parsing"
+          ? "Parsing source"
+          : "Live preview ready"
+
   return (
     <footer className="status-bar">
       <span>{nodeCount} nodes</span>
       <span>{groupCount} groups</span>
       <span>{connectionCount} connections</span>
       <span className={`status-pill status-${state.status}`}>{state.status}</span>
-      <span className="status-message">
-        {state.parseError
-          ? `${state.parseError.message} at ${state.parseError.line}:${state.parseError.column}`
-          : "Live preview ready"}
-      </span>
+      <span className="status-message">{message}</span>
     </footer>
   )
 }

@@ -83,4 +83,39 @@ describe("LayoutBridge", () => {
 
     bridge.terminate()
   })
+
+  it("falls back to direct layout computation when the worker is unavailable", async () => {
+    vi.useFakeTimers()
+    const computeLayout = vi.fn().mockResolvedValue({
+      bounds: { width: 20, height: 20 },
+      nodes: [],
+      groups: [],
+      edges: []
+    })
+
+    const bridge = new LayoutBridge({
+      debounceMs: 0,
+      workerFactory: () => {
+        throw new Error("worker unavailable")
+      },
+      computeLayout
+    })
+
+    const onResult = vi.fn()
+    bridge.onResult = onResult
+    bridge.requestLayout(sampleDiagram)
+
+    vi.advanceTimersByTime(0)
+    await Promise.resolve()
+
+    expect(computeLayout).toHaveBeenCalledWith(sampleDiagram)
+    expect(onResult).toHaveBeenCalledWith({
+      bounds: { width: 20, height: 20 },
+      nodes: [],
+      groups: [],
+      edges: []
+    })
+
+    vi.useRealTimers()
+  })
 })

@@ -9,6 +9,7 @@ export interface UseDiagramResult {
   ast: Diagram | null
   layout: LayoutResult | null
   parseError: ParseError | null
+  runtimeError: string | null
   status: "idle" | "parsing" | "layouting" | "ready" | "error"
 }
 
@@ -17,15 +18,18 @@ export function useDiagram(source: string): UseDiagramResult {
   const [ast, setAst] = useState<Diagram | null>(null)
   const [layout, setLayout] = useState<LayoutResult | null>(null)
   const [parseError, setParseError] = useState<ParseError | null>(null)
+  const [runtimeError, setRuntimeError] = useState<string | null>(null)
   const [status, setStatus] = useState<UseDiagramResult["status"]>("idle")
 
   useEffect(() => {
     const nextBridge = new LayoutBridge()
     nextBridge.onResult = (result) => {
       setLayout(result)
+      setRuntimeError(null)
       setStatus("ready")
     }
-    nextBridge.onError = () => {
+    nextBridge.onError = (error) => {
+      setRuntimeError(error.message)
       setStatus("error")
     }
 
@@ -41,11 +45,13 @@ export function useDiagram(source: string): UseDiagramResult {
     const result = parse(source)
     if (!result.ok) {
       setParseError(result.error)
+      setRuntimeError(null)
       setStatus("error")
       return
     }
 
     setParseError(null)
+    setRuntimeError(null)
     setAst(result.ast)
 
     if (!bridge) {
@@ -56,5 +62,5 @@ export function useDiagram(source: string): UseDiagramResult {
     bridge.requestLayout(result.ast)
   }, [bridge, source])
 
-  return { ast, layout, parseError, status }
+  return { ast, layout, parseError, runtimeError, status }
 }

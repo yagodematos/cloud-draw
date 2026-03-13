@@ -12,44 +12,53 @@ export function buildEditorExtensions(source: string, error: ParseError | null) 
     EditorView.theme({
       "&": {
         height: "100%",
-        fontSize: "13px"
+        fontSize: "13px",
+        backgroundColor: "#162038",
+        color: "#f7f6f2"
       },
       ".cm-scroller": {
         fontFamily: "var(--font-mono)"
       },
+      ".cm-cursor, .cm-dropCursor": {
+        borderLeftColor: "#f7f6f2"
+      },
+      ".cm-activeLine": {
+        backgroundColor: "rgba(255, 255, 255, 0.04)"
+      },
       ".cm-keyword, .cm-operator": {
-        color: "#155eef",
+        color: "#88aaff",
         fontWeight: "700"
       },
       ".cm-comment": {
-        color: "#7a869d",
+        color: "#f1a561",
         fontStyle: "italic"
       },
       ".cm-squareBracket": {
-        color: "#6e4aff"
+        color: "#d6a8ff"
       },
       ".cm-brace": {
-        color: "#23314f",
+        color: "#f7f6f2",
         fontWeight: "700"
       },
       ".cm-property": {
-        color: "#b54708"
+        color: "#7be0cf"
       },
       ".cm-string": {
-        color: "#117864"
+        color: "#ffd089"
       },
       ".cm-name": {
-        color: "#172033"
+        color: "#f7f6f2"
       },
       ".cm-separator": {
-        color: "#5b6578"
+        color: "#b8c5de"
       },
       ".cm-content": {
         padding: "18px 18px 24px"
       },
       ".cm-gutters": {
-        borderRight: "1px solid rgba(23, 32, 51, 0.08)",
-        backgroundColor: "#f8fbff"
+        borderRight: "1px solid rgba(255, 255, 255, 0.06)",
+        backgroundColor: "#1b2743",
+        color: "#94a3bd"
       }
     }),
     ...createErrorDecorations(source, error)
